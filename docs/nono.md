@@ -2,29 +2,54 @@
 
 [Back to overview](../README.md)
 
-Install nono and create the reusable policy that will run Pi. All commands below use Linux Bash or WSL 2.
+Follow these steps in order in Ubuntu Bash, including WSL 2. Complete the shell configuration once per Linux user.
 
 ## 1. Install nono
 
-Run these commands in a Linux Bash terminal (or inside your WSL 2 distribution on Windows):
-
 ```bash
 curl -fsSL https://nono.sh/install.sh | sh
+```
 
-# Make user-installed commands available in this terminal.
-export PATH="$HOME/.local/bin:$PATH"
+Linux requires Landlock support. See the [official installation guide](https://nono.sh/docs/cli/getting_started/installation).
 
-# Keep this setting for future interactive Bash terminals; safe to repeat.
+## 2. Save PATH permanently
+
+Add nono's executable directory to `~/.bashrc` without duplicating the line:
+
+```bash
 grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc" ||
   printf '\n%s\n' 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+```
 
+## 3. Configure Bash login terminals
+
+Open your login configuration:
+
+```bash
+nano "$HOME/.bash_profile"
+```
+
+Ensure it contains this block once, preserving existing settings:
+
+```bash
+if [ -f "$HOME/.profile" ]; then
+    . "$HOME/.profile"
+fi
+```
+
+This lets login terminals load Ubuntu's `.profile`, which loads `.bashrc` and your PATH settings.
+
+## 4. Apply and verify
+
+```bash
+source "$HOME/.bash_profile"
 command -v nono
 nono --version
 ```
 
-These startup instructions are for Bash. Non-interactive scripts should set PATH explicitly or use the full executable path. Linux requires a kernel with Landlock support. See the [official installation guide](https://nono.sh/docs/cli/getting_started/installation).
+Open a new Bash terminal and run `nono --version` there too. Both terminals should find nono without another PATH export.
 
-## 2. Create a profile
+## 5. Create a profile
 
 Create a reusable sandbox policy named `pi`: `--extends default` inherits nono's baseline rules, and `--groups node_runtime` adds access to Node.js runtime paths needed by Pi. This prepares its permissions; it does not install or launch Pi:
 
